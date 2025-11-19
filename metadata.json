@@ -1,0 +1,5 @@
+{
+  "name": "Lumina Feast - Virtual Food Photographer",
+  "description": "A generative AI tool for restaurateurs to create high-end food photography from text menus using Google Imagen 3 and Gemini 2.5 Flash Image editing.",
+  "requestFramePermissions": []
+}
