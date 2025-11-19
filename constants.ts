@@ -1,10 +1,15 @@
-import { AestheticConfig } from './types';
+
+import { AestheticConfig, AspectRatioConfig } from './types';
 import { 
   Coffee, 
   Sun, 
   Smartphone, 
   UtensilsCrossed,
-  Camera
+  Camera,
+  Square,
+  Monitor,
+  RectangleHorizontal,
+  RectangleVertical
 } from 'lucide-react';
 
 export const AESTHETICS: AestheticConfig[] = [
@@ -29,6 +34,13 @@ export const AESTHETICS: AestheticConfig[] = [
     promptSuffix: 'Professional food photography, social media flat lay style, direct top-down view, vibrant colors, trendy plating, instagram aesthetic, high contrast, pop colors, 8k resolution, perfectly lit.',
     iconName: 'Smartphone'
   }
+];
+
+export const ASPECT_RATIOS: AspectRatioConfig[] = [
+  { id: '1:1', label: 'Square (1:1)', iconName: 'Square' },
+  { id: '4:3', label: 'Standard (4:3)', iconName: 'RectangleHorizontal' },
+  { id: '16:9', label: 'Cinematic (16:9)', iconName: 'Monitor' },
+  { id: '9:16', label: 'Social Story (9:16)', iconName: 'Smartphone' },
 ];
 
 export const SAMPLE_MENU = `Appetizers:

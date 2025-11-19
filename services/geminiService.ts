@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 
 const apiKey = process.env.API_KEY || '';
@@ -43,18 +44,45 @@ export const parseMenuText = async (text: string): Promise<{ name: string; descr
 
 /**
  * Generates an image for a specific dish using Imagen 4.
+ * Uses Gemini 2.5 Flash to first expand and refine the prompt for better results.
  */
-export const generateDishImage = async (dishName: string, dishDescription: string, stylePrompt: string): Promise<string> => {
+export const generateDishImage = async (
+  dishName: string, 
+  dishDescription: string, 
+  stylePrompt: string,
+  aspectRatio: string = '4:3'
+): Promise<string> => {
   try {
-    const fullPrompt = `A delicious, high-end photo of ${dishName}. ${dishDescription}. ${stylePrompt}`;
+    // Step 1: Expand the prompt using Gemini 2.5 Flash
+    // This allows for dynamic blending of the dish details with the requested aesthetic style
+    const promptRefinementResponse = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `You are an expert food photography director. Create a highly detailed image generation prompt for Google Imagen based on these inputs:
+      
+      Dish Name: ${dishName}
+      Dish Description: ${dishDescription}
+      Aesthetic Style Guidelines: ${stylePrompt}
+      AspectRatio: ${aspectRatio}
+      
+      Instructions:
+      1. Create a cohesive visual description that seamlessly integrates the dish details with the aesthetic style.
+      2. Describe the lighting, plating, camera angle, depth of field, and background textures specifically for this dish and style.
+      3. Ensure the food sounds delicious and the photography sounds professional.
+      4. Output ONLY the raw prompt text to be sent to the image generator. Do not include "Prompt:" or markdown.`,
+    });
+
+    const fullPrompt = promptRefinementResponse.text?.trim() || `A delicious, high-end photo of ${dishName}. ${dishDescription}. ${stylePrompt}`;
     
+    console.log(`Generating image for "${dishName}" with prompt:`, fullPrompt);
+
+    // Step 2: Generate the image
     const response = await ai.models.generateImages({
       model: 'imagen-4.0-generate-001',
       prompt: fullPrompt,
       config: {
         numberOfImages: 1,
         outputMimeType: 'image/jpeg',
-        aspectRatio: '4:3', // Good for food photography
+        aspectRatio: aspectRatio, 
       },
     });
 

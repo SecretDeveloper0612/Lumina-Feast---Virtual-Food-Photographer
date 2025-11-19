@@ -1,16 +1,19 @@
+
 import React, { useState, useCallback } from 'react';
 import { parseMenuText, generateDishImage } from './services/geminiService';
-import { Dish, AestheticType } from './types';
+import { Dish, AestheticType, AspectRatioType } from './types';
 import { AESTHETICS } from './constants';
 import { StyleSelector } from './components/StyleSelector';
 import { MenuInput } from './components/MenuInput';
 import { DishCard } from './components/DishCard';
 import { ImageEditor } from './components/ImageEditor';
+import { AspectRatioSelector } from './components/AspectRatioSelector';
 import { Camera, Sparkles } from 'lucide-react';
 
 const App: React.FC = () => {
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [selectedStyle, setSelectedStyle] = useState<AestheticType>('RUSTIC');
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatioType>('4:3');
   const [isParsing, setIsParsing] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
 
@@ -37,15 +40,16 @@ const App: React.FC = () => {
     const dish = dishes.find(d => d.id === dishId);
     if (!dish) return;
 
-    // Update state to loading
-    setDishes(prev => prev.map(d => d.id === dishId ? { ...d, isGenerating: true } : d));
+    // Update state to loading and save the intention aspect ratio
+    setDishes(prev => prev.map(d => d.id === dishId ? { ...d, isGenerating: true, aspectRatio: selectedAspectRatio } : d));
 
     try {
       const aesthetic = AESTHETICS.find(s => s.id === selectedStyle);
       const imageUrl = await generateDishImage(
         dish.name, 
         dish.description, 
-        aesthetic?.promptSuffix || ''
+        aesthetic?.promptSuffix || '',
+        selectedAspectRatio
       );
       
       setDishes(prev => prev.map(d => d.id === dishId ? { ...d, imageUrl, isGenerating: false } : d));
@@ -55,10 +59,14 @@ const App: React.FC = () => {
       setDishes(prev => prev.map(d => d.id === dishId ? { ...d, isGenerating: false } : d));
       alert(`Failed to generate image for ${dish.name}`);
     }
-  }, [dishes, selectedStyle]);
+  }, [dishes, selectedStyle, selectedAspectRatio]);
 
   const handleUpdateImage = useCallback((id: string, newImage: string) => {
     setDishes(prev => prev.map(d => d.id === id ? { ...d, imageUrl: newImage } : d));
+  }, []);
+
+  const handleUploadImage = useCallback((id: string, imageData: string) => {
+    setDishes(prev => prev.map(d => d.id === id ? { ...d, imageUrl: imageData } : d));
   }, []);
 
   const handleGenerateAll = () => {
@@ -127,7 +135,10 @@ const App: React.FC = () => {
           {/* Right Column: Visualization */}
           <div className="lg:col-span-2">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Photography Style</h2>
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
+                <h2 className="text-xl font-semibold text-white">Photography Settings</h2>
+                <AspectRatioSelector selectedRatio={selectedAspectRatio} onSelect={setSelectedAspectRatio} />
+              </div>
               <StyleSelector selectedStyle={selectedStyle} onSelect={setSelectedStyle} />
             </div>
 
@@ -149,6 +160,8 @@ const App: React.FC = () => {
                     dish={dish} 
                     onGenerate={handleGenerateImage}
                     onEdit={setEditingDish}
+                    onUpload={handleUploadImage}
+                    defaultAspectRatio={selectedAspectRatio}
                   />
                 ))}
               </div>
